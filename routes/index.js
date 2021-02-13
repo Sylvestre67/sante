@@ -6,22 +6,15 @@ const { centers } = require('./centers')
 
 const { queues } = require('../queues/queues')
 
-/* GET home page. */
-router.get('/', function (req, res, next) {
-  res.render('index', { title: 'Express' })
-})
-
 const addTaskToQueue = (center, idx) => {
   let task;
-  const name = _.get(center, 'data.profile.name_with_title_and_determiner');
-
-  const queue = queues.find(q => q.name === name)
+  const id = _.get(center, 'data.profile.id');
+  const queue = queues.find(q => q.name === id.toString())
 
   if(queue){
     task = queue.add(center.data, {
       repeat: {
-        every: 10000 * 3, // every 30 seconds
-        limit: 5, // limit to 10 for now
+        every: (10000 * 6) + idx * 5000, // every minute + idx * 5 sec.
       },
     })
   }
@@ -29,9 +22,14 @@ const addTaskToQueue = (center, idx) => {
   return task
 }
 
-router.post('/sniffer/start', async (req, res, next) => {
-  centers.forEach(async (center) => {
-    await addTaskToQueue(center)
+/* GET home page. */
+router.get('/', function (req, res, next) {
+  res.render('index', { title: 'Express' })
+})
+
+router.post('/sniffer/start', async (req, res) => {
+  centers.forEach(async (center, idx) => {
+    await addTaskToQueue(center, idx)
   })
   
   res.send({
@@ -39,14 +37,40 @@ router.post('/sniffer/start', async (req, res, next) => {
   })
 })
 
-router.post('/sniffer/pause', async (req, res, next) => {
-  const pause = await snifferQueue.pasue()
-  res.send(pause)
+router.post('/sniffer/pause/:id', async (req, res) => {
+  const {params} = req;
+  const {id} = params;
+
+  const queue = queues.find(q => q.name === id)
+
+  if(queue){
+    await queue.pause()
+
+    return res.send({
+      name,
+      status: 'paused'
+    })
+  }
+  
+  return res.status(404).send(`${id} - not found`);
 })
 
-router.post('/sniffer/resume', async (req, res, next) => {
-  const resume = await snifferQueue.resume()
-  res.send(resume)
+router.post('/sniffer/resume/:id', async (req, res) => {
+  const {params} = req;
+  const {id} = params;
+
+  const queue = queues.find(q => q.name === id)
+
+  if(queue){
+    await queue.resume()
+
+    return res.send({
+      id,
+      status: 'resume'
+    })
+  }
+
+  return res.status(404).send(`${id} - not found`);
 })
 
 module.exports = router

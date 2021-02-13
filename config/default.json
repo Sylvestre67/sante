@@ -1,0 +1,9 @@
+{
+    "jwt": {
+        "secret": "secret"
+    },
+    "mongo": {
+        "user": "root",
+        "pwd": "root"
+    }
+}

@@ -8,10 +8,10 @@ const { centers } = require('../routes/centers');
 const queues = [];
 
 centers.forEach((center) => {
-  const name = _.get(center, 'data.profile.name_with_title_and_determiner');
+  const name = _.get(center, 'data.profile.id');
   
   if(name){
-    const queue = new Queue(name);
+    const queue = new Queue(name.toString());
     queue.process((job) =>  requestAvailabilities(job))
 
     queue.on('completed', (job, result) => {
@@ -23,7 +23,7 @@ centers.forEach((center) => {
         console.info(
           `${
             profile.name_with_title_and_determiner
-          } HAS AVAILABLE APPOITNMENTS ${JSON.stringify(result)}`
+          } HAS AVAILABLE APPOITNMENTS ${JSON.stringify(availabilities)}`
         )
       }
 
@@ -31,7 +31,7 @@ centers.forEach((center) => {
         console.info(
           `${
             profile.name_with_title_and_determiner
-          } HAS NO APPOITNMENTS ${JSON.stringify(result)}`
+          } HAS NO APPOITNMENTS ${JSON.stringify(availabilities)}`
         )
       }
     });
